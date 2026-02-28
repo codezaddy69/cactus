@@ -1,0 +1,34 @@
+# Core Framework
+fastapi>=0.109.0
+uvicorn[standard]>=0.27.0
+pydantic>=2.5.0
+pydantic-settings>=2.1.0
+
+# Exchange Integration
+ccxt>=4.2.0
+
+# Databases
+influxdb-client>=1.40.0
+redis>=5.0.1
+asyncpg>=0.29.0
+sqlalchemy[asyncio]>=2.0.25
+alembic>=1.13.1
+
+# Data Processing
+pandas>=2.1.0
+polars>=0.20.0
+numpy>=1.26.0
+
+# Technical Analysis
+pandas-ta>=0.3.14b0
+
+# Testing
+pytest>=7.4.0
+pytest-asyncio>=0.23.0
+pytest-cov>=4.1.0
+
+# Utilities
+python-dotenv>=1.0.0
+loguru>=0.7.2
+httpx>=0.26.0
+apscheduler>=3.10.4

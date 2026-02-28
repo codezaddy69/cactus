@@ -1,0 +1,86 @@
+version: '3.8'
+
+services:
+  # InfluxDB 3 - Time-series database
+  influxdb:
+    image: influxdb:3.0
+    container_name: cactus-influxdb
+    ports:
+      - "8086:8086"
+    environment:
+      - DOCKER_INFLUXDB_INIT_MODE=setup
+      - DOCKER_INFLUXDB_INIT_USERNAME=admin
+      - DOCKER_INFLUXDB_INIT_PASSWORD=password
+      - DOCKER_INFLUXDB_INIT_ORG=cactus
+      - DOCKER_INFLUXDB_INIT_BUCKET=trading_data
+      - DOCKER_INFLUXDB_INIT_RETENTION=30d
+    volumes:
+      - influxdb_data:/var/lib/influxdb2
+    networks:
+      - cactus-network
+
+  # Redis - Cache and message queue
+  redis:
+    image: redis:7-alpine
+    container_name: cactus-redis
+    ports:
+      - "6379:6379"
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_data:/data
+    networks:
+      - cactus-network
+
+  # PostgreSQL - Metadata storage
+  postgres:
+    image: postgres:15
+    container_name: cactus-postgres
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_DB=cactus
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - cactus-network
+
+  # Cactus Trading Bot
+  cactus:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: cactus-bot
+    ports:
+      - "8000:8000"
+    environment:
+      - INFLUXDB_URL=http://influxdb:8086
+      - INFLUXDB_TOKEN=admin-token (replace with actual token)
+      - INFLUXDB_ORG=cactus
+      - INFLUXDB_BUCKET=trading_data
+      - REDIS_URL=redis://redis:6379/0
+      - POSTGRES_URL=postgresql+asyncpg://postgres:postgres@postgres:5432/cactus
+      - BINANCE_API_KEY=${BINANCE_API_KEY}
+      - BINANCE_API_SECRET=${BINANCE_API_SECRET}
+      - COINBASE_API_KEY=${COINBASE_API_KEY}
+      - COINBASE_API_SECRET=${COINBASE_API_SECRET}
+    depends_on:
+      - influxdb
+      - redis
+      - postgres
+    volumes:
+      - ./logs:/app/logs
+      - ./.env:/app/.env
+    networks:
+      - cactus-network
+    restart: unless-stopped
+
+volumes:
+  influxdb_data:
+  redis_data:
+  postgres_data:
+
+networks:
+  cactus-network:
+    driver: bridge
